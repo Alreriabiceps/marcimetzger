@@ -20,6 +20,9 @@ export const Hero: React.FC = () => {
     const isMobile = window.innerWidth < 768;
 
     if (isReducedMotion) {
+      gsap.set(heroImageContainerRef.current, {
+        clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)',
+      });
       gsap.set(
         [
           heroImageRef.current,
@@ -28,7 +31,7 @@ export const Hero: React.FC = () => {
           ctaContainerRef.current,
           floatingCardRef.current,
         ],
-        { opacity: 1, y: 0, scale: 1, clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)' }
+        { opacity: 1, y: 0, scale: 1 }
       );
       return;
     }
@@ -104,33 +107,41 @@ export const Hero: React.FC = () => {
           '-=0.5'
         );
 
-      gsap.to(heroImageRef.current, {
-        yPercent: isMobile ? 8 : 24,
-        scale: isMobile ? 1 : 1.06,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: heroSectionRef.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: isMobile ? 0.5 : 0.65,
-        },
-      });
+      // Attach scroll parallax only after the load-in finishes so scrub tweens
+      // don't capture the hidden (opacity: 0) starting state on desktop.
+      tl.call(() => {
+        gsap.fromTo(
+          heroImageRef.current,
+          { yPercent: 0, scale: 1 },
+          {
+            yPercent: isMobile ? 8 : 22,
+            scale: isMobile ? 1 : 1.05,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: heroSectionRef.current,
+              start: 'top top',
+              end: 'bottom top',
+              scrub: isMobile ? 0.5 : 0.65,
+            },
+          }
+        );
 
-      // Content lifts / fades as you leave the hero
-      gsap.to(
-        [headlineRef.current, subtextRef.current, ctaContainerRef.current, floatingCardRef.current],
-        {
-          y: isMobile ? -24 : -80,
-          opacity: isMobile ? 0.15 : 0,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: heroSectionRef.current,
-            start: isMobile ? 'center top' : 'top top',
-            end: 'bottom top',
-            scrub: isMobile ? 0.6 : 0.75,
-          },
-        }
-      );
+        gsap.fromTo(
+          [headlineRef.current, subtextRef.current, ctaContainerRef.current, floatingCardRef.current],
+          { y: 0, opacity: 1 },
+          {
+            y: isMobile ? -24 : -64,
+            opacity: isMobile ? 0.15 : 0.12,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: heroSectionRef.current,
+              start: 'center top',
+              end: 'bottom top',
+              scrub: isMobile ? 0.6 : 0.75,
+            },
+          }
+        );
+      });
     }, heroSectionRef);
 
     return () => ctx.revert();
