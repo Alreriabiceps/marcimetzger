@@ -1,0 +1,6 @@
+{
+  "name": "L’ARCHE Architecture & Luxury Estates",
+  "description": "An editorial luxury architectural and estate showcase featuring GSAP ScrollTrigger animations, synchronized Lenis smooth scrolling, and an interactive photo gallery with fullscreen lightbox.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
