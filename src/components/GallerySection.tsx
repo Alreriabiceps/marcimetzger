@@ -6,7 +6,7 @@ import { useSmoothScroll } from '../context/SmoothScrollContext';
 import { Maximize2, MapPin, Camera, Sparkles, SlidersHorizontal } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { softReveal } from '../lib/scrollAnimations';
+import { viewportReveals, parallaxImage, VIEWPORT } from '../lib/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -29,7 +29,15 @@ export const GallerySection: React.FC = () => {
     if (isReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      softReveal('.gallery-header > *', sectionRef.current, { stagger: 0.08 });
+      viewportReveals(({ mobile, desktop }) => {
+        mobile('.gallery-header > *', sectionRef.current, { stagger: 0.08 });
+        desktop('.gallery-header > *', sectionRef.current, {
+          y: 40,
+          stagger: 0.12,
+          duration: 0.9,
+          fromOpacity: 0.15,
+        });
+      });
     }, sectionRef);
 
     return () => ctx.revert();
@@ -42,36 +50,33 @@ export const GallerySection: React.FC = () => {
     if (!tiles.length) return;
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        tiles,
-        { y: 18, opacity: 0.35 },
-        {
-          y: 0,
-          opacity: 1,
+      viewportReveals(({ mobile, desktop }) => {
+        mobile(tiles, gridRef.current, {
+          y: 18,
+          fromOpacity: 0.35,
           stagger: 0.06,
           duration: 0.5,
-          ease: 'power2.out',
-          overwrite: 'auto',
-        }
-      );
+        });
+        desktop(tiles, gridRef.current, {
+          y: 36,
+          scale: 0.94,
+          fromOpacity: 0.2,
+          stagger: 0.09,
+          duration: 0.75,
+          start: 'top 90%',
+        });
+      });
 
       tiles.forEach((tile) => {
         const img = tile.querySelector('img');
         if (!img) return;
-        gsap.fromTo(
-          img,
-          { scale: 1.1 },
-          {
-            scale: 1,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: tile,
-              start: 'top bottom',
-              end: 'bottom top',
-              scrub: true,
-            },
-          }
-        );
+        const imgMm = gsap.matchMedia();
+        imgMm.add(VIEWPORT.mobile, () => {
+          parallaxImage(img, tile, { fromScale: 1.1 });
+        });
+        imgMm.add(VIEWPORT.desktop, () => {
+          parallaxImage(img, tile, { fromScale: 1.18, yFrom: -5, yTo: 8, scrub: 0.5 });
+        });
       });
     }, gridRef);
 

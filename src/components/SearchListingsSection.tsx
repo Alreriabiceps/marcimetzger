@@ -4,7 +4,7 @@ import { Search } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { CustomSelect } from './CustomSelect';
-import { softReveal } from '../lib/scrollAnimations';
+import { viewportReveals, parallaxImage, VIEWPORT } from '../lib/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -93,29 +93,54 @@ export const SearchListingsSection: React.FC<SearchListingsSectionProps> = ({ on
     if (isReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        bgRef.current,
-        { scale: 1.16, yPercent: -6 },
-        {
-          scale: 1,
-          yPercent: 8,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top bottom',
-            end: 'bottom top',
-            scrub: true,
-          },
-        }
-      );
+      const bgMm = gsap.matchMedia();
+      bgMm.add(VIEWPORT.mobile, () => {
+        parallaxImage(bgRef.current, sectionRef.current, {
+          fromScale: 1.16,
+          yFrom: -6,
+          yTo: 8,
+        });
+      });
+      bgMm.add(VIEWPORT.desktop, () => {
+        parallaxImage(bgRef.current, sectionRef.current, {
+          fromScale: 1.22,
+          yFrom: -10,
+          yTo: 14,
+          scrub: 0.6,
+        });
+      });
 
-      softReveal('.search-title', sectionRef.current, { y: 18 });
-      softReveal(panelRef.current, panelRef.current, { y: 24, fromOpacity: 0.35, duration: 0.6 });
-      softReveal('.search-field', panelRef.current, {
-        y: 12,
-        stagger: 0.04,
-        duration: 0.45,
-        start: 'top 88%',
+      viewportReveals(({ mobile, desktop }) => {
+        mobile('.search-title', sectionRef.current, { y: 18 });
+        desktop('.search-title', sectionRef.current, {
+          y: 44,
+          filterBlur: 4,
+          fromOpacity: 0.15,
+          duration: 0.95,
+        });
+
+        mobile(panelRef.current, panelRef.current, { y: 24, fromOpacity: 0.35, duration: 0.6 });
+        desktop(panelRef.current, panelRef.current, {
+          y: 40,
+          scale: 0.96,
+          fromOpacity: 0.2,
+          duration: 0.9,
+          ease: 'power3.out',
+        });
+
+        mobile('.search-field', panelRef.current, {
+          y: 12,
+          stagger: 0.04,
+          duration: 0.45,
+          start: 'top 88%',
+        });
+        desktop('.search-field', panelRef.current, {
+          y: 20,
+          stagger: 0.07,
+          duration: 0.6,
+          fromOpacity: 0.25,
+          start: 'top 86%',
+        });
       });
     }, sectionRef);
 

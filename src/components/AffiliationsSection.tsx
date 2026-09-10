@@ -3,7 +3,7 @@ import { useSmoothScroll } from '../context/SmoothScrollContext';
 import { Phone, ShieldCheck } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { softReveal } from '../lib/scrollAnimations';
+import { viewportReveals } from '../lib/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -42,9 +42,32 @@ export const AffiliationsSection: React.FC = () => {
     if (isReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      softReveal('.affil-header > *', sectionRef.current, { stagger: 0.05 });
-      softReveal('.affil-card', sectionRef.current, { y: 18, stagger: 0.06 });
-      softReveal('.affil-cta', sectionRef.current, { y: 12 });
+      viewportReveals(({ mobile, desktop }) => {
+        mobile('.affil-header > *', sectionRef.current, { stagger: 0.05 });
+        desktop('.affil-header > *', sectionRef.current, {
+          y: 36,
+          stagger: 0.12,
+          duration: 0.85,
+          fromOpacity: 0.2,
+        });
+
+        mobile('.affil-card', sectionRef.current, { y: 18, stagger: 0.06 });
+        desktop('.affil-card', sectionRef.current, {
+          y: 32,
+          scale: 0.94,
+          stagger: 0.1,
+          duration: 0.8,
+          fromOpacity: 0.2,
+        });
+
+        mobile('.affil-cta', sectionRef.current, { y: 12 });
+        desktop('.affil-cta', sectionRef.current, {
+          y: 24,
+          scale: 0.98,
+          duration: 0.75,
+          fromOpacity: 0.3,
+        });
+      });
     }, sectionRef);
 
     return () => ctx.revert();

@@ -3,7 +3,7 @@ import { useSmoothScroll } from '../context/SmoothScrollContext';
 import { ArrowUpRight } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { softReveal } from '../lib/scrollAnimations';
+import { viewportReveals, parallaxImage, VIEWPORT } from '../lib/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -54,7 +54,15 @@ export const GetItSoldSection: React.FC = () => {
     if (isReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      softReveal('.gis-header > *', headerRef.current, { stagger: 0.08 });
+      viewportReveals(({ mobile, desktop }) => {
+        mobile('.gis-header > *', headerRef.current, { stagger: 0.08 });
+        desktop('.gis-header > *', headerRef.current, {
+          y: 40,
+          stagger: 0.12,
+          duration: 0.9,
+          fromOpacity: 0.15,
+        });
+      });
 
       gsap.utils.toArray<HTMLElement>('.gis-row').forEach((row) => {
         const media = row.querySelector('.gis-media') as HTMLElement | null;
@@ -63,38 +71,52 @@ export const GetItSoldSection: React.FC = () => {
         const fromLeft = row.dataset.side === 'left';
 
         if (media) {
-          softReveal(media, row, {
-            x: fromLeft ? -28 : 28,
-            y: 0,
-            fromOpacity: 0.35,
-            duration: 0.7,
-            start: 'top 88%',
+          viewportReveals(({ mobile, desktop }) => {
+            mobile(media, row, {
+              x: fromLeft ? -28 : 28,
+              y: 0,
+              fromOpacity: 0.35,
+              duration: 0.7,
+              start: 'top 88%',
+            });
+            desktop(media, row, {
+              x: fromLeft ? -56 : 56,
+              y: 24,
+              scale: 0.94,
+              filterBlur: 4,
+              fromOpacity: 0.2,
+              duration: 0.95,
+              start: 'top 85%',
+            });
           });
         }
 
         if (img) {
-          gsap.fromTo(
-            img,
-            { scale: 1.08 },
-            {
-              scale: 1,
-              ease: 'none',
-              scrollTrigger: {
-                trigger: row,
-                start: 'top bottom',
-                end: 'bottom top',
-                scrub: true,
-              },
-            }
-          );
+          const imgMm = gsap.matchMedia();
+          imgMm.add(VIEWPORT.mobile, () => {
+            parallaxImage(img, row, { fromScale: 1.08 });
+          });
+          imgMm.add(VIEWPORT.desktop, () => {
+            parallaxImage(img, row, { fromScale: 1.16, yFrom: -6, yTo: 10, scrub: 0.6 });
+          });
         }
 
         if (copy) {
-          softReveal(copy.querySelectorAll('.gis-item'), copy, {
-            x: fromLeft ? 18 : -18,
-            y: 10,
-            stagger: 0.06,
-            start: 'top 90%',
+          viewportReveals(({ mobile, desktop }) => {
+            mobile(copy.querySelectorAll('.gis-item'), copy, {
+              x: fromLeft ? 18 : -18,
+              y: 10,
+              stagger: 0.06,
+              start: 'top 90%',
+            });
+            desktop(copy.querySelectorAll('.gis-item'), copy, {
+              x: fromLeft ? 36 : -36,
+              y: 20,
+              stagger: 0.1,
+              duration: 0.8,
+              fromOpacity: 0.2,
+              start: 'top 88%',
+            });
           });
         }
       });

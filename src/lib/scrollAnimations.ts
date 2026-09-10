@@ -10,14 +10,35 @@ ScrollTrigger.config({
   fastScrollEnd: true,
 });
 
-type RevealOpts = {
+export const VIEWPORT = {
+  mobile: '(max-width: 1023px)',
+  desktop: '(min-width: 1024px)',
+} as const;
+
+export type RevealOpts = {
   y?: number;
   x?: number;
+  scale?: number;
+  rotate?: number;
+  skewX?: number;
+  filterBlur?: number;
   duration?: number;
   stagger?: number;
   start?: string;
   fromOpacity?: number;
   delay?: number;
+  ease?: string;
+};
+
+/** Preset for richer desktop section entrances */
+export const DESKTOP_REVEAL: RevealOpts = {
+  y: 32,
+  scale: 0.96,
+  fromOpacity: 0.25,
+  duration: 0.85,
+  stagger: 0.09,
+  start: 'top 88%',
+  ease: 'power3.out',
 };
 
 /**
@@ -34,54 +55,109 @@ export function softReveal(
   const {
     y = 16,
     x = 0,
+    scale,
+    rotate,
+    skewX,
+    filterBlur,
     duration = 0.5,
     stagger = 0.05,
     start = 'top 92%',
     fromOpacity = 0.4,
     delay = 0,
+    ease = 'power2.out',
   } = opts;
 
-  const tween = gsap.fromTo(
-    targets,
-    { y, x, opacity: fromOpacity },
-    {
-      y: 0,
-      x: 0,
-      opacity: 1,
-      duration,
-      stagger,
-      delay,
-      ease: 'power2.out',
-      immediateRender: false,
-      scrollTrigger: {
-        trigger,
-        start,
-        toggleActions: 'play none none none',
-        onEnterBack: () => {
-          gsap.set(targets, { y: 0, x: 0, opacity: 1, clearProps: 'transform' });
-        },
-        // If already past start when ST is created / refreshed, finish immediately
-        onRefresh: (self) => {
-          if (self.progress > 0 || self.scroll() >= self.start) {
-            self.animation?.progress(1);
-          }
-        },
+  const fromVars: gsap.TweenVars = { y, x, opacity: fromOpacity };
+  const toVars: gsap.TweenVars = {
+    y: 0,
+    x: 0,
+    opacity: 1,
+    duration,
+    stagger,
+    delay,
+    ease,
+    immediateRender: false,
+  };
+
+  if (scale !== undefined) {
+    fromVars.scale = scale;
+    toVars.scale = 1;
+  }
+  if (rotate !== undefined) {
+    fromVars.rotate = rotate;
+    toVars.rotate = 0;
+  }
+  if (skewX !== undefined) {
+    fromVars.skewX = skewX;
+    toVars.skewX = 0;
+  }
+  if (filterBlur !== undefined) {
+    fromVars.filter = `blur(${filterBlur}px)`;
+    toVars.filter = 'blur(0px)';
+  }
+
+  const tween = gsap.fromTo(targets, fromVars, {
+    ...toVars,
+    scrollTrigger: {
+      trigger,
+      start,
+      toggleActions: 'play none none none',
+      onEnterBack: () => {
+        gsap.set(targets, {
+          y: 0,
+          x: 0,
+          opacity: 1,
+          scale: 1,
+          rotate: 0,
+          skewX: 0,
+          filter: 'none',
+          clearProps: 'transform,filter',
+        });
       },
-    }
-  );
+      onRefresh: (self) => {
+        if (self.progress > 0 || self.scroll() >= self.start) {
+          self.animation?.progress(1);
+        }
+      },
+    },
+  });
 
   return tween;
+}
+
+/**
+ * Register mobile + desktop reveals in one matchMedia block.
+ * Desktop opts are merged on top of mobile defaults.
+ */
+export function viewportReveals(
+  setup: (api: {
+    mobile: (targets: gsap.TweenTarget, trigger: gsap.DOMTarget | null | undefined, opts?: RevealOpts) => void;
+    desktop: (targets: gsap.TweenTarget, trigger: gsap.DOMTarget | null | undefined, opts?: RevealOpts) => void;
+  }) => void
+) {
+  const mm = gsap.matchMedia();
+
+  setup({
+    mobile: (targets, trigger, opts) => {
+      mm.add(VIEWPORT.mobile, () => softReveal(targets, trigger, opts));
+    },
+    desktop: (targets, trigger, opts) => {
+      mm.add(VIEWPORT.desktop, () => softReveal(targets, trigger, { ...DESKTOP_REVEAL, ...opts }));
+    },
+  });
+
+  return mm;
 }
 
 /** Soft Ken Burns / parallax on an image while its section is in view. */
 export function parallaxImage(
   target: gsap.TweenTarget,
   trigger: gsap.DOMTarget | null | undefined,
-  opts: { fromScale?: number; yFrom?: number; yTo?: number } = {}
+  opts: { fromScale?: number; yFrom?: number; yTo?: number; scrub?: boolean | number } = {}
 ) {
   if (!trigger) return;
 
-  const { fromScale = 1.1, yFrom = -4, yTo = 6 } = opts;
+  const { fromScale = 1.1, yFrom = -4, yTo = 6, scrub = true } = opts;
 
   return gsap.fromTo(
     target,
@@ -94,10 +170,27 @@ export function parallaxImage(
         trigger,
         start: 'top bottom',
         end: 'bottom top',
-        scrub: true,
+        scrub,
       },
     }
   );
+}
+
+/** Section-level scrub parallax — stronger on desktop by default. */
+export function scrubY(
+  target: gsap.TweenTarget,
+  trigger: gsap.DOMTarget | null | undefined,
+  opts: { yPercent?: number; scrub?: boolean | number; start?: string; end?: string } = {}
+) {
+  if (!trigger) return;
+
+  const { yPercent = -8, scrub = true, start = 'top top', end = 'bottom top' } = opts;
+
+  return gsap.to(target, {
+    yPercent,
+    ease: 'none',
+    scrollTrigger: { trigger, start, end, scrub },
+  });
 }
 
 /**
@@ -109,11 +202,9 @@ export function flushPassedScrollTriggers() {
     const anim = st.animation;
     if (!anim) return;
 
-    // Leave scrubbed animations alone — they follow scroll position
     const scrub = (st.vars as { scrub?: boolean | number } | undefined)?.scrub;
     if (scrub !== undefined && scrub !== false) return;
 
-    // Already scrolled past the trigger start → show final state
     if (st.isActive || st.progress > 0 || st.scroll() >= st.start - 1) {
       if (anim.progress() < 1) {
         anim.progress(1).pause();

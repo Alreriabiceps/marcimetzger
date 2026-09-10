@@ -4,7 +4,7 @@ import { useSmoothScroll } from '../context/SmoothScrollContext';
 import { ArrowUpRight, CheckCircle2, MapPin, Phone, Clock } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { softReveal } from '../lib/scrollAnimations';
+import { viewportReveals } from '../lib/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -117,26 +117,54 @@ export const ContactSection: React.FC = () => {
     if (isReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      softReveal(formCardRef.current, sectionRef.current, {
-        y: 24,
-        fromOpacity: 0.35,
-        duration: 0.6,
-      });
-      softReveal(copyRef.current, sectionRef.current, {
-        y: 14,
-        delay: 0.08,
-      });
-      softReveal(formColRef.current, sectionRef.current, {
-        y: 14,
-        delay: 0.12,
-      });
-      softReveal('.contact-field', formColRef.current, {
-        y: 10,
-        fromOpacity: 0.45,
-        stagger: 0.04,
-        duration: 0.4,
-        delay: 0.16,
-        start: 'top 95%',
+      viewportReveals(({ mobile, desktop }) => {
+        mobile(formCardRef.current, sectionRef.current, {
+          y: 24,
+          fromOpacity: 0.35,
+          duration: 0.6,
+        });
+        desktop(formCardRef.current, sectionRef.current, {
+          y: 48,
+          scale: 0.96,
+          filterBlur: 5,
+          fromOpacity: 0.15,
+          duration: 1,
+        });
+
+        mobile(copyRef.current, sectionRef.current, { y: 14, delay: 0.08 });
+        desktop(copyRef.current, sectionRef.current, {
+          x: -32,
+          y: 24,
+          delay: 0.1,
+          duration: 0.85,
+          fromOpacity: 0.2,
+        });
+
+        mobile(formColRef.current, sectionRef.current, { y: 14, delay: 0.12 });
+        desktop(formColRef.current, sectionRef.current, {
+          x: 32,
+          y: 24,
+          delay: 0.14,
+          duration: 0.85,
+          fromOpacity: 0.2,
+        });
+
+        mobile('.contact-field', formColRef.current, {
+          y: 10,
+          fromOpacity: 0.45,
+          stagger: 0.04,
+          duration: 0.4,
+          delay: 0.16,
+          start: 'top 95%',
+        });
+        desktop('.contact-field', formColRef.current, {
+          y: 18,
+          fromOpacity: 0.3,
+          stagger: 0.06,
+          duration: 0.55,
+          delay: 0.2,
+          start: 'top 92%',
+        });
       });
     }, sectionRef);
 

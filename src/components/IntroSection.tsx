@@ -3,7 +3,7 @@ import { useSmoothScroll } from '../context/SmoothScrollContext';
 import { Phone, MapPin } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { softReveal } from '../lib/scrollAnimations';
+import { viewportReveals, scrubY, VIEWPORT } from '../lib/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -18,44 +18,79 @@ export const IntroSection: React.FC = () => {
     if (isReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      // Play-once (not scrubbed) so jumping past / scrolling back can't re-hide copy
-      softReveal(portraitWrapRef.current, sectionRef.current, {
-        y: 20,
-        fromOpacity: 0.4,
-        duration: 0.65,
+      viewportReveals(({ mobile, desktop }) => {
+        mobile(portraitWrapRef.current, sectionRef.current, {
+          y: 20,
+          fromOpacity: 0.4,
+          duration: 0.65,
+        });
+        desktop(portraitWrapRef.current, sectionRef.current, {
+          y: 48,
+          scale: 0.92,
+          filterBlur: 6,
+          fromOpacity: 0.2,
+          duration: 1,
+          ease: 'power3.out',
+        });
+
+        mobile('.intro-line', copyRef.current, { y: 16, stagger: 0.05 });
+        desktop('.intro-line', copyRef.current, {
+          y: 28,
+          stagger: 0.1,
+          duration: 0.75,
+          fromOpacity: 0.2,
+        });
       });
 
       if (portraitImgRef.current) {
-        gsap.fromTo(
-          portraitImgRef.current,
-          { scale: 1.06 },
-          {
-            scale: 1,
-            duration: 0.8,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: 'top 92%',
-              toggleActions: 'play none none none',
-              onRefresh: (self) => {
-                if (self.scroll() >= self.start) self.animation?.progress(1);
+        const imgMm = gsap.matchMedia();
+        imgMm.add(VIEWPORT.mobile, () => {
+          gsap.fromTo(
+            portraitImgRef.current,
+            { scale: 1.06 },
+            {
+              scale: 1,
+              duration: 0.8,
+              ease: 'power2.out',
+              scrollTrigger: {
+                trigger: sectionRef.current,
+                start: 'top 92%',
+                toggleActions: 'play none none none',
+                onRefresh: (self) => {
+                  if (self.scroll() >= self.start) self.animation?.progress(1);
+                },
               },
-            },
-          }
-        );
+            }
+          );
+        });
+        imgMm.add(VIEWPORT.desktop, () => {
+          gsap.fromTo(
+            portraitImgRef.current,
+            { scale: 1.14 },
+            {
+              scale: 1,
+              duration: 1.1,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: sectionRef.current,
+                start: 'top 88%',
+                toggleActions: 'play none none none',
+                onRefresh: (self) => {
+                  if (self.scroll() >= self.start) self.animation?.progress(1);
+                },
+              },
+            }
+          );
+        });
       }
 
-      softReveal('.intro-line', copyRef.current, { y: 16, stagger: 0.05 });
-
-      gsap.to(portraitWrapRef.current, {
-        yPercent: -6,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: true,
-        },
+      const parallaxMm = gsap.matchMedia();
+      parallaxMm.add(VIEWPORT.mobile, () => {
+        scrubY(portraitWrapRef.current, sectionRef.current, { yPercent: -6 });
+      });
+      parallaxMm.add(VIEWPORT.desktop, () => {
+        scrubY(portraitWrapRef.current, sectionRef.current, { yPercent: -12, scrub: 0.6 });
+        scrubY(copyRef.current, sectionRef.current, { yPercent: -4, scrub: 0.8 });
       });
     }, sectionRef);
 

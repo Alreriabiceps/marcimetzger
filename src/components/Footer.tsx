@@ -4,7 +4,7 @@ import { Phone, MapPin, Clock, Facebook, Instagram, Linkedin } from 'lucide-reac
 import { Logo } from './Logo';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { softReveal } from '../lib/scrollAnimations';
+import { viewportReveals } from '../lib/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -29,13 +29,30 @@ export const Footer: React.FC = () => {
     if (isReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      softReveal('.footer-reveal', footerRef.current, { stagger: 0.08, start: 'top 95%' });
-      softReveal('.footer-link', footerRef.current, {
-        y: 8,
-        fromOpacity: 0.5,
-        stagger: 0.03,
-        duration: 0.4,
-        start: 'top 92%',
+      viewportReveals(({ mobile, desktop }) => {
+        mobile('.footer-reveal', footerRef.current, { stagger: 0.08, start: 'top 95%' });
+        desktop('.footer-reveal', footerRef.current, {
+          y: 28,
+          stagger: 0.1,
+          duration: 0.8,
+          fromOpacity: 0.2,
+          start: 'top 92%',
+        });
+
+        mobile('.footer-link', footerRef.current, {
+          y: 8,
+          fromOpacity: 0.5,
+          stagger: 0.03,
+          duration: 0.4,
+          start: 'top 92%',
+        });
+        desktop('.footer-link', footerRef.current, {
+          y: 16,
+          fromOpacity: 0.35,
+          stagger: 0.05,
+          duration: 0.55,
+          start: 'top 90%',
+        });
       });
     }, footerRef);
 

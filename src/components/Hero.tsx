@@ -105,13 +105,14 @@ export const Hero: React.FC = () => {
         );
 
       gsap.to(heroImageRef.current, {
-        yPercent: isMobile ? 8 : 18,
+        yPercent: isMobile ? 8 : 24,
+        scale: isMobile ? 1 : 1.06,
         ease: 'none',
         scrollTrigger: {
           trigger: heroSectionRef.current,
           start: 'top top',
           end: 'bottom top',
-          scrub: 0.5,
+          scrub: isMobile ? 0.5 : 0.65,
         },
       });
 
@@ -119,14 +120,14 @@ export const Hero: React.FC = () => {
       gsap.to(
         [headlineRef.current, subtextRef.current, ctaContainerRef.current, floatingCardRef.current],
         {
-          y: isMobile ? -24 : -60,
-          opacity: 0.15,
+          y: isMobile ? -24 : -80,
+          opacity: isMobile ? 0.15 : 0,
           ease: 'none',
           scrollTrigger: {
             trigger: heroSectionRef.current,
-            start: 'center top',
+            start: isMobile ? 'center top' : 'top top',
             end: 'bottom top',
-            scrub: 0.6,
+            scrub: isMobile ? 0.6 : 0.75,
           },
         }
       );

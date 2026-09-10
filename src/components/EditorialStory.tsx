@@ -4,7 +4,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SERVICES } from '../data/servicesData';
-import { softReveal } from '../lib/scrollAnimations';
+import { softReveal, viewportReveals } from '../lib/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -19,7 +19,15 @@ export const EditorialStory: React.FC = () => {
     if (isReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      softReveal('.svc-header > *', headerRef.current, { stagger: 0.08 });
+      viewportReveals(({ mobile, desktop }) => {
+        mobile('.svc-header > *', headerRef.current, { stagger: 0.08 });
+        desktop('.svc-header > *', headerRef.current, {
+          y: 44,
+          stagger: 0.14,
+          duration: 0.95,
+          fromOpacity: 0.15,
+        });
+      });
 
       // Mobile / tablet: simple reveal cards (no sticky stack)
       const mm = gsap.matchMedia();
@@ -116,12 +124,15 @@ export const EditorialStory: React.FC = () => {
             );
           }
 
-          // Play-once so scrolling back up does not re-hide service copy
           softReveal(copy, panel, {
-            y: 18,
-            fromOpacity: 0.45,
-            stagger: 0.05,
-            start: 'top 75%',
+            y: 28,
+            scale: 0.98,
+            filterBlur: 3,
+            fromOpacity: 0.25,
+            stagger: 0.08,
+            duration: 0.8,
+            ease: 'power3.out',
+            start: 'top 72%',
           });
 
           ScrollTrigger.create({

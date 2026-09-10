@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useSmoothScroll } from '../context/SmoothScrollContext';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { softReveal } from '../lib/scrollAnimations';
+import { viewportReveals } from '../lib/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -19,7 +19,16 @@ export const MapSection: React.FC = () => {
     if (isReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      softReveal(frameRef.current, sectionRef.current, { y: 20, duration: 0.6 });
+      viewportReveals(({ mobile, desktop }) => {
+        mobile(frameRef.current, sectionRef.current, { y: 20, duration: 0.6 });
+        desktop(frameRef.current, sectionRef.current, {
+          y: 40,
+          scale: 0.97,
+          fromOpacity: 0.2,
+          duration: 0.95,
+          ease: 'power3.out',
+        });
+      });
 
       gsap.fromTo(
         veilRef.current,
