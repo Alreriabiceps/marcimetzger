@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { GalleryImage } from '../types';
 import { useSmoothScroll } from '../context/SmoothScrollContext';
-import { X, ChevronLeft, ChevronRight, Maximize2, MapPin, Compass, Info, Check } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { gsap } from 'gsap';
 
 interface LightboxProps {
@@ -19,7 +19,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
 }) => {
   const { pauseScroll, resumeScroll, isReducedMotion } = useSmoothScroll();
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [showDetails, setShowDetails] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
@@ -33,15 +32,18 @@ export const Lightbox: React.FC<LightboxProps> = ({
   const isOpen = currentIndex !== null && currentIndex >= 0 && currentIndex < images.length;
   const currentImage = isOpen ? images[currentIndex] : null;
 
-  // Handle Pause / Resume Scroll in Lenis
+  // Handle Pause / Resume Scroll in Lenis + hide site header
   useEffect(() => {
     if (isOpen) {
       pauseScroll();
+      document.body.classList.add('lightbox-open');
     } else {
       resumeScroll();
+      document.body.classList.remove('lightbox-open');
     }
     return () => {
       resumeScroll();
+      document.body.classList.remove('lightbox-open');
     };
   }, [isOpen, pauseScroll, resumeScroll]);
 
@@ -183,7 +185,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
     <div
       ref={containerRef}
       id="photo-lightbox"
-      className="fixed inset-0 z-50 flex items-center justify-center select-none"
+      className="fixed inset-0 z-[60] flex items-center justify-center select-none"
       role="dialog"
       aria-modal="true"
       aria-label={`Photo Gallery Lightbox: ${currentImage.title}`}
@@ -210,24 +212,16 @@ export const Lightbox: React.FC<LightboxProps> = ({
           </span>
         </div>
 
-        {/* Right: Toggle Details + Close Button */}
+        {/* Right: Close Button */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          <button
-            onClick={() => setShowDetails(!showDetails)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#14161a] border border-[#23262d] text-xs text-[#cfcac0] hover:text-white hover:border-[#c5a059]/50 transition-colors"
-            title="Toggle caption and architectural details"
-          >
-            <Info className="w-3.5 h-3.5 text-[#c5a059]" />
-            <span className="hidden md:inline">{showDetails ? 'Hide Dossier' : 'Show Dossier'}</span>
-          </button>
-
           <button
             id="lightbox-close-btn"
             onClick={handleClose}
             aria-label="Close Lightbox (ESC)"
-            className="w-11 h-11 rounded-full bg-[#14161a] border border-[#23262d] flex items-center justify-center text-[#f2ede4] hover:bg-[#c5a059] hover:text-[#0c0d0e] transition-colors duration-200"
+            className="inline-flex items-center gap-2 h-11 px-4 rounded-full bg-[#c5a059] border border-[#c5a059] text-[#0c0d0e] hover:bg-[#e4caa0] transition-colors duration-200 font-medium text-xs uppercase tracking-[0.16em]"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
+            <span>Close</span>
           </button>
         </div>
       </div>
@@ -265,7 +259,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
       >
         {/* Loading placeholder skeleton */}
         {!imageLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#111316] rounded-xl border border-[#23262d] min-w-[320px] min-h-[320px]">
+          <div className="absolute inset-0 flex items-center justify-center bg-[#111316] rounded-xl border border-[#23262d] min-w-0 w-full max-w-full min-h-[200px] sm:min-h-[320px]">
             <div className="w-8 h-8 border-2 border-[#c5a059] border-t-transparent rounded-full animate-spin" />
           </div>
         )}
@@ -281,30 +275,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
           }`}
           style={{ willChange: 'transform, opacity' }}
         />
-
-        {/* Rich Caption & Metadata Overlay */}
-        {showDetails && (
-          <div className="mt-3 w-full max-w-2xl bg-[#0f1114]/90 backdrop-blur-md border border-[#23272e] p-4 rounded-xl text-left">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-              <h3 className="font-display text-base sm:text-lg font-normal text-[#f2ede4]">
-                {currentImage.title}
-              </h3>
-              <div className="flex items-center gap-1.5 text-xs text-[#c5a059] font-mono">
-                <MapPin className="w-3 h-3" />
-                <span>{currentImage.location}</span>
-              </div>
-            </div>
-
-            <p className="text-xs text-[#9b9ca1] leading-relaxed font-light mb-2">
-              {currentImage.caption}
-            </p>
-
-            <div className="flex items-center justify-between text-[11px] text-[#6e727a] pt-2 border-t border-[#1d2025]">
-              <span>Arch: {currentImage.architect} ({currentImage.year})</span>
-              <span className="italic">{currentImage.subtitle}</span>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Bottom Thumbnail Strip */}
@@ -316,7 +286,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
               e.stopPropagation();
               onNavigate(idx);
             }}
-            className={`relative shrink-0 w-12 h-9 sm:w-14 sm:h-10 rounded-lg overflow-hidden transition-all duration-200 ${
+            className={`relative shrink-0 w-14 h-11 sm:w-14 sm:h-10 rounded-lg overflow-hidden transition-all duration-200 ${
               idx === currentIndex
                 ? 'ring-2 ring-[#c5a059] scale-105 opacity-100'
                 : 'opacity-40 hover:opacity-80'

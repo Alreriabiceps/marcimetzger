@@ -2,12 +2,12 @@ export interface PropertyItem {
   id: string;
   title: string;
   location: string;
-  category: 'Coastal' | 'Alpine' | 'Urban Penthouse' | 'Desert Monolith';
+  category: 'Residential' | 'Luxury' | 'Investment' | 'Land';
   price: string;
   sqft: string;
   bedrooms: number;
   bathrooms: number;
-  architect: string;
+  agent: string;
   year: number;
   image: string;
   description: string;
@@ -20,7 +20,7 @@ export interface GalleryImage {
   subtitle: string;
   category: string;
   location: string;
-  architect: string;
+  photographer: string;
   year: string;
   thumbUrl: string;
   highResUrl: string;

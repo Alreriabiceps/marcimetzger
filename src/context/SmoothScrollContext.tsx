@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState, useCallb
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { flushPassedScrollTriggers } from '../lib/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -36,7 +37,6 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const lenisRef = useRef<Lenis | null>(null);
 
-  // Sync reduced motion media query changes
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -47,7 +47,6 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
 
-  // Initialize or destroy Lenis based on reduced motion
   useEffect(() => {
     if (isReducedMotion) {
       if (lenisRef.current) {
@@ -55,43 +54,80 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
         lenisRef.current = null;
         setLenisInstance(null);
       }
+      ScrollTrigger.refresh();
       return;
     }
 
-    // Initialize Lenis with refined architectural deceleration
     const lenis = new Lenis({
-      duration: 1.15,
+      duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      touchMultiplier: 1.5,
+      touchMultiplier: 1.4,
+      wheelMultiplier: 1,
+      autoResize: true,
     });
 
     lenisRef.current = lenis;
     setLenisInstance(lenis);
 
-    // Synchronize Lenis scroll position with GSAP ScrollTrigger
+    let flushRaf = 0;
     const onScroll = () => {
       ScrollTrigger.update();
+      // Catch reveals skipped by fast / programmatic scrolls (mobile navbar jumps)
+      if (!flushRaf) {
+        flushRaf = requestAnimationFrame(() => {
+          flushRaf = 0;
+          flushPassedScrollTriggers();
+        });
+      }
     };
     lenis.on('scroll', onScroll);
 
-    // Connect Lenis to GSAP ticker for frame-perfect animation alignment
     const updateTicker = (time: number) => {
       lenis.raf(time * 1000);
     };
     gsap.ticker.add(updateTicker);
     gsap.ticker.lagSmoothing(0);
 
-    // Refresh ScrollTrigger after DOM has settled
-    const timeout = setTimeout(() => {
+    const refresh = () => {
       ScrollTrigger.refresh();
-    }, 100);
+    };
+
+    const timeout = window.setTimeout(refresh, 120);
+    const onLoad = () => refresh();
+    const onResize = () => {
+      lenis.resize();
+      refresh();
+    };
+
+    window.addEventListener('load', onLoad);
+    window.addEventListener('resize', onResize);
+
+    // Images can change layout height after load — refresh ST once they settle
+    const imgs = Array.from(document.images);
+    let pending = imgs.filter((img) => !img.complete).length;
+    if (pending === 0) {
+      window.setTimeout(refresh, 250);
+    } else {
+      imgs.forEach((img) => {
+        if (img.complete) return;
+        const done = () => {
+          pending -= 1;
+          if (pending <= 0) refresh();
+        };
+        img.addEventListener('load', done, { once: true });
+        img.addEventListener('error', done, { once: true });
+      });
+    }
 
     return () => {
-      clearTimeout(timeout);
+      window.clearTimeout(timeout);
+      window.removeEventListener('load', onLoad);
+      window.removeEventListener('resize', onResize);
       lenis.off('scroll', onScroll);
+      if (flushRaf) cancelAnimationFrame(flushRaf);
       gsap.ticker.remove(updateTicker);
       lenis.destroy();
       lenisRef.current = null;
@@ -103,20 +139,37 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setIsReducedMotion((prev) => !prev);
   }, []);
 
-  const scrollTo = useCallback((target: string | HTMLElement, options?: { offset?: number; duration?: number }) => {
-    if (lenisRef.current && !isReducedMotion) {
-      lenisRef.current.scrollTo(target, {
-        offset: options?.offset ?? -80,
-        duration: options?.duration ?? 1.2,
-      });
-    } else {
-      const el = typeof target === 'string' ? document.querySelector(target) : target;
-      if (el) {
-        const top = el.getBoundingClientRect().top + window.pageYOffset + (options?.offset ?? -80);
-        window.scrollTo({ top, behavior: isReducedMotion ? 'auto' : 'smooth' });
+  const scrollTo = useCallback(
+    (target: string | HTMLElement, options?: { offset?: number; duration?: number }) => {
+      const offset = options?.offset ?? -96;
+      const duration = options?.duration ?? 1.25;
+
+      const afterScroll = () => {
+        requestAnimationFrame(() => {
+          ScrollTrigger.refresh();
+          flushPassedScrollTriggers();
+          window.setTimeout(() => flushPassedScrollTriggers(), 100);
+        });
+      };
+
+      if (lenisRef.current && !isReducedMotion) {
+        lenisRef.current.scrollTo(target, {
+          offset,
+          duration,
+          onComplete: afterScroll,
+        });
+        return;
       }
-    }
-  }, [isReducedMotion]);
+
+      const el = typeof target === 'string' ? document.querySelector(target) : target;
+      if (el instanceof HTMLElement) {
+        const top = el.getBoundingClientRect().top + window.pageYOffset + offset;
+        window.scrollTo({ top, behavior: isReducedMotion ? 'auto' : 'smooth' });
+        window.setTimeout(afterScroll, isReducedMotion ? 50 : Math.min(duration * 1000, 1400));
+      }
+    },
+    [isReducedMotion]
+  );
 
   const pauseScroll = useCallback(() => {
     if (lenisRef.current) {
@@ -130,6 +183,7 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
       lenisRef.current.start();
     }
     document.body.style.overflow = '';
+    requestAnimationFrame(() => ScrollTrigger.refresh());
   }, []);
 
   return (

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="faviconTitle">
+  <title id="faviconTitle">Marci Metzger Homes</title>
+
+  <!-- Dark square mark -->
+  <rect width="64" height="64" rx="12" fill="#0c0d0e"/>
+
+  <!-- Soft gold frame -->
+  <rect x="3" y="3" width="58" height="58" rx="10" fill="none" stroke="#c5a059" stroke-width="1.5" opacity="0.85"/>
+
+  <!-- Stylized MM monogram -->
+  <g fill="none" stroke="#f2ede4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Left M -->
+    <path d="M14 44 V20 L22 36 L30 20 V44" stroke-width="2.4"/>
+    <!-- Right M -->
+    <path d="M34 44 V20 L42 36 L50 20 V44" stroke-width="2.4"/>
+  </g>
+
+  <!-- Gold accent underline -->
+  <line x1="16" y1="50" x2="48" y2="50" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

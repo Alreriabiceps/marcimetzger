@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" role="img" aria-labelledby="logoTitle">
+  <title id="logoTitle">Marci Metzger Homes</title>
+  <text
+    x="320"
+    y="78"
+    text-anchor="middle"
+    fill="#f2ede4"
+    font-family="Cinzel, Georgia, 'Times New Roman', serif"
+    font-size="52"
+    font-weight="500"
+    letter-spacing="0.22em"
+  >MARCI METZGER</text>
+  <line x1="48" y1="100" x2="592" y2="100" stroke="#f2ede4" stroke-width="1.5"/>
+  <text
+    x="320"
+    y="148"
+    text-anchor="middle"
+    fill="#f2ede4"
+    font-family="'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive"
+    font-size="52"
+  >Homes</text>
+</svg>

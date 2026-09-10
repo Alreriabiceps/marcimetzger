@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/* Anchor offset under fixed navbar */
+html {
+  scroll-padding-top: 6.5rem;
+}
+
+@media (max-width: 639px) {
+  html {
+    scroll-padding-top: 5.25rem;
+  }
+}
+
+#main-navbar {
+  padding-top: env(safe-area-inset-top);
+}
+
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -30,17 +45,89 @@ html.lenis, html.lenis body {
   pointer-events: none;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
+/* Custom scrollbar — luxury dark / gold */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3d3428 #0c0d0e;
 }
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
 ::-webkit-scrollbar-track {
   background: #0c0d0e;
+  border-left: 1px solid #181a1e;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #2a2d32;
-  border-radius: 3px;
+  background: linear-gradient(180deg, #4a3f30 0%, #2e2a24 100%);
+  border-radius: 999px;
+  border: 2px solid #0c0d0e;
+  background-clip: padding-box;
 }
+
 ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #c5a059 0%, #a8873f 100%);
+  border: 2px solid #0c0d0e;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #e4caa0;
+  border: 2px solid #0c0d0e;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: #0c0d0e;
+}
+
+/* Hide scrollbar while keeping scroll (e.g. lightbox filmstrip) */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Search form custom dropdown menus */
+.custom-select-menu {
+  scrollbar-width: thin;
+  scrollbar-color: #c5a059 #14161a;
+}
+
+.custom-select-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-select-menu::-webkit-scrollbar-track {
+  background: #14161a;
+  border: none;
+}
+
+.custom-select-menu::-webkit-scrollbar-thumb {
   background: #c5a059;
+  border-radius: 999px;
+  border: none;
+}
+
+.custom-select-menu::-webkit-scrollbar-thumb:hover {
+  background: #e4caa0;
+  border: none;
+}
+
+/* Hide site header while gallery lightbox is open */
+#main-navbar {
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s, padding 0.5s ease, background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+}
+
+body.lightbox-open #main-navbar {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-100%);
 }

@@ -6,6 +6,7 @@ import { useSmoothScroll } from '../context/SmoothScrollContext';
 import { Maximize2, MapPin, Camera, Sparkles, SlidersHorizontal } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { softReveal } from '../lib/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -18,7 +19,7 @@ export const GallerySection: React.FC = () => {
   const headerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
-  const categories = ['All', 'Exterior Architecture', 'Interior Design', 'Landscape Architecture', 'Monolithic Structure'];
+  const categories = ['All', 'Exteriors', 'Interiors', 'Community'];
 
   const filteredImages = activeCategoryFilter === 'All'
     ? GALLERY_IMAGES
@@ -28,31 +29,51 @@ export const GallerySection: React.FC = () => {
     if (isReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      // Header reveal
-      gsap.from(headerRef.current, {
-        y: 40,
-        opacity: 0,
-        duration: 1.0,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top 80%',
-        },
-      });
-
-      // Gallery grid items staggered entrance
-      gsap.from('.gallery-tile', {
-        y: 50,
-        opacity: 0,
-        stagger: 0.12,
-        duration: 0.85,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: gridRef.current,
-          start: 'top 85%',
-        },
-      });
+      softReveal('.gallery-header > *', sectionRef.current, { stagger: 0.08 });
     }, sectionRef);
+
+    return () => ctx.revert();
+  }, [isReducedMotion]);
+
+  useEffect(() => {
+    if (isReducedMotion || !gridRef.current) return;
+
+    const tiles = gridRef.current.querySelectorAll('.gallery-tile');
+    if (!tiles.length) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        tiles,
+        { y: 18, opacity: 0.35 },
+        {
+          y: 0,
+          opacity: 1,
+          stagger: 0.06,
+          duration: 0.5,
+          ease: 'power2.out',
+          overwrite: 'auto',
+        }
+      );
+
+      tiles.forEach((tile) => {
+        const img = tile.querySelector('img');
+        if (!img) return;
+        gsap.fromTo(
+          img,
+          { scale: 1.1 },
+          {
+            scale: 1,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: tile,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: true,
+            },
+          }
+        );
+      });
+    }, gridRef);
 
     return () => ctx.revert();
   }, [isReducedMotion, activeCategoryFilter]);
@@ -78,18 +99,18 @@ export const GallerySection: React.FC = () => {
     <section
       id="gallery"
       ref={sectionRef}
-      className="py-28 sm:py-36 bg-[#0c0d0e] text-[#f2ede4] relative z-20 border-t border-[#181a1e]"
+      className="py-28 sm:py-36 bg-[#0c0d0e] text-[#f2ede4] relative z-20 border-t border-[#181a1e] scroll-mt-28"
     >
       <div className="max-w-7xl mx-auto px-6 sm:px-8">
         {/* Gallery Header */}
-        <div ref={headerRef} className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div ref={headerRef} className="gallery-header flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-[#c5a059] font-medium mb-3">
               <Camera className="w-3.5 h-3.5" />
-              <span>Visual Anthology</span>
+              <span>Photo Gallery</span>
             </div>
             <h2 className="font-display text-3xl sm:text-5xl font-light text-[#f2ede4] tracking-tight">
-              Editorial Gallery
+              Pahrump Living
             </h2>
           </div>
 
@@ -99,7 +120,7 @@ export const GallerySection: React.FC = () => {
               <button
                 key={cat}
                 onClick={() => setActiveCategoryFilter(cat)}
-                className={`px-3.5 py-1.5 rounded-full text-xs tracking-wider transition-all duration-300 ${
+                className={`min-h-11 px-4 py-2.5 rounded-full text-xs tracking-wider transition-all duration-300 ${
                   activeCategoryFilter === cat
                     ? 'bg-[#c5a059] text-[#0c0d0e] font-semibold'
                     : 'bg-[#15171b] text-[#9b9ca1] hover:text-[#f2ede4] border border-[#23272e]'
@@ -153,7 +174,7 @@ export const GallerySection: React.FC = () => {
                   </div>
 
                   {/* Hover Floating Action Icon */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100 pointer-events-none z-10">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 transform scale-100 md:scale-90 md:group-hover:scale-100 pointer-events-none z-10">
                     <div className="w-12 h-12 rounded-full bg-[#c5a059] text-[#0c0d0e] flex items-center justify-center shadow-2xl">
                       <Maximize2 className="w-5 h-5" />
                     </div>

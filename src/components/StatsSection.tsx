@@ -69,6 +69,17 @@ export const StatsSection: React.FC = () => {
       className="py-20 sm:py-24 bg-[#0e1012] border-y border-[#1d2025] relative z-20"
     >
       <div className="max-w-7xl mx-auto px-6 sm:px-8">
+        <div className="mb-12 text-center max-w-2xl mx-auto">
+          <div className="text-xs uppercase tracking-[0.25em] text-[#c5a059] font-medium mb-3">
+            Get It Sold
+          </div>
+          <h2 className="font-display text-3xl sm:text-4xl font-light text-[#f2ede4] tracking-tight mb-3">
+            Top Residential Sales
+          </h2>
+          <p className="text-sm text-[#9b9ca1] font-light leading-relaxed">
+            We helped nearly 90 clients in 2021, and closed $28.5 million in sales — and we keep raising the bar every year.
+          </p>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {STATS_DATA.map((stat, idx) => (
             <div
